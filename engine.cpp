@@ -147,14 +147,17 @@ Board::Board(const unsigned int length, const unsigned int height,
     hei = height;
     filler = filler_pix;
 
-    //create the fully empty board and oldboard
+    //create the fully empty board
     for (unsigned int i = 0; i < hei; i++){
         board.push_back(vector<Pixel> (len));
-        oldboard.push_back(vector<Pixel> (len));
     }
 
+    //set oldboard and freshboard to the fully empty board
+    oldboard = board;
+    freshboard = board;
+
     //fill the regular board with filler chars
-    clear_board();
+    clear_board(false);
 }
 
 void Board::write(const unsigned int row, const unsigned int col,
@@ -187,13 +190,17 @@ void Board::draw(unsigned const int height_offset,
     color(16, 16);
 }
 
-void Board::clear_board(){
-    /* sets all positions in the board to the filler character */
+void Board::clear_board(const bool redraw_whole_board){
+    /* sets all positions in the board to the filler character and totally
+     * resets oldboard to redraw the whole screen if asked
+     */
     for (unsigned int i = 0; i < hei; i++){
         for (unsigned int j = 0; j < len; j++){
             board.at(i).at(j) = filler;
         }
     }
+    if (redraw_whole_board)
+        oldboard = freshboard;
 }
 
 

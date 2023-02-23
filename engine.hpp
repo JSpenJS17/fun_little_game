@@ -76,12 +76,13 @@ class Board{
         void draw(unsigned const int height_offset, 
                 unsigned const int player_touch_edge);
 
-        void clear_board();
+        void clear_board(const bool redraw_whole_board);
 
     private:
         Pixel filler;
         unsigned int len;
         unsigned int hei;
+        vector<vector<Pixel>> freshboard;
         vector<vector<Pixel>> oldboard;
         vector<vector<Pixel>> board;
         

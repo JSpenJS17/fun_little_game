@@ -4,6 +4,10 @@
 using namespace std;
 
 #define ENTER 13
+#define UP 72
+#define LEFT 75
+#define DOWN 80
+#define RIGHT 77
 
 class Apple;
 class Player;
@@ -30,7 +34,7 @@ class Apple{
             kind = variety;
             switch (kind){
                 case 'g':
-                    face = Pixel('g', SKY_BLUE, SKY_BLUE);
+                    face = Pixel('g', BLUE, BLUE);
                     break;
                 case 'b':
                     face = Pixel('b', RED, RED);
@@ -197,120 +201,166 @@ void display_header(const int score, const int score_change,
     }
 
     color(16, 16);
-    
+}
+
+bool is_on_arrows(const char key){
+    switch (key){
+        case UP:
+            return true;
+
+        case DOWN:
+            return true;
+
+        case RIGHT:
+            return true;
+
+        case LEFT:
+            return true;
+    }
+    return false;
+}
+
+char convert_to_wasd(const char key){
+    switch (key){
+        case UP:
+            return 'w';
+
+        case DOWN:
+            return 's';
+
+        case RIGHT:
+            return 'd';
+
+        case LEFT:
+            return 'a';
+    }
+    return key;
 }
 
 int main(){
-    //setup the screen
-    clear_screen();
-    show_cursor(false);
+    bool keep_playing = true;
+    while (keep_playing){
+        //setup the screen
+        clear_screen();
+        show_cursor(false);
 
-    //create a random seed
-    srand(time(NULL));
+        //create a random seed
+        srand(time(NULL));
 
-    //create the player
-    Player guy = Player(size_y/2, size_x/2, 
-                        Pixel('P', LIGHT_GREEN, LIGHT_GREEN));
-    //create the apple manager
-    Apple_Manager apples = Apple_Manager();
-    apples.spawn_apple(guy, 'g');
-    apples.spawn_apple(guy, 'b');
+        //create the player
+        Player guy = Player(size_y/2, size_x/2, 
+                            Pixel('P', LIGHT_GREEN, LIGHT_GREEN));
+        //create the apple manager
+        Apple_Manager apples = Apple_Manager();
+        apples.spawn_apple(guy, 'g');
+        apples.spawn_apple(guy, 'b');
 
-    //wait a sec for everything to initialize
-    delay(100);
-    //draw the board with space for the header
-    game.draw(2, 0);
-    //wait another sec just in case
-    delay(100);
-    cout << endl << "WASD to move";
-
-    //set the total play time allowed
-    int time_ms = 15000;
-
-    //display the header
-    display_header(0, 0, time_ms, 0);
-
-    //wait until there is a key pressed...
-    char key = wait_for_kb_input();
-
-    //...and we're off to the races!
-    //get the start time and current time (which is start time right now)
-    clock_t start_time = clock();
-    clock_t current_time = start_time;
-    short time_change = 0;
-    short score_change = 0;
-    
-    //current_time - start_time = time elapsed, while that's < time_ms, do:
-    while (current_time - start_time < time_ms){
-        //move the guy based on key input
-        guy.move(key);
-
-        //if the guy is on an apple
-        if (apples.on_apple(guy.row, guy.col)){
-            Apple apple = apples.get_apple_at(guy.row, guy.col);
-            //eat the apple
-            guy.eat(apple);
-            switch (apple.kind){
-                case 'g':
-                    time_change = 1000;
-                    score_change = 1;
-                    break;
-                case 'b':
-                    time_change = -500;
-                    score_change = -1;
-                    break;
-            }
-            time_ms += time_change;
-            //remove the apple from the list
-            apples.remove_apple(guy.row, guy.col);
-            //remove the next apple which is the corresponding bad/good one
-            apples.pop_apple();
-            apples.spawn_apple(guy, 'g');
-            apples.spawn_apple(guy, 'b');
-        }
-
-        //draw the board now that all calculations are done
+        //wait a sec for everything to initialize
+        delay(100);
+        //draw the board with space for the header
         game.draw(2, 0);
+        //wait another sec just in case
+        delay(100);
+        cout << endl << "WASD/Arrow Keys to move";
 
-        //grab the time
-        current_time = clock();
-        //display the header with current score and time information
-        display_header(guy.length, score_change,
-                       time_ms - (current_time - start_time), time_change);
+        //set the total play time allowed
+        int time_ms = 15000;
 
-        //get the keyboard input if there is one right now
-        key = get_kb_input();
+        //display the header
+        display_header(0, 0, time_ms, 0);
 
-        //wait 16 ms because it gives the printing some time to catch up
-        //just in case
-        delay(16);
+        //wait until there is a key pressed...
+        char key = -1;
+        while (key != 'w' && key != 'a' && key != 's' && key != 'd')
+            key = wait_for_kb_input();
+
+        //...and we're off to the races!
+        //get the start time and current time (which is start time right now)
+        clock_t start_time = clock();
+        clock_t current_time = start_time;
+        short time_change = 0;
+        short score_change = 0;
+        
+        //current_time - start_time = time elapsed, while that's < time_ms, do:
+        while (current_time - start_time < time_ms){
+            key = convert_to_wasd(key);
+            //move the guy based on key input
+            guy.move(key);
+
+            //if the guy is on an apple
+            if (apples.on_apple(guy.row, guy.col)){
+                Apple apple = apples.get_apple_at(guy.row, guy.col);
+                //eat the apple
+                guy.eat(apple);
+                switch (apple.kind){
+                    case 'g':
+                        time_change = 1000;
+                        score_change = 1;
+                        break;
+                    case 'b':
+                        time_change = -500;
+                        score_change = -1;
+                        break;
+                }
+                time_ms += time_change;
+                //remove the apple from the list
+                apples.remove_apple(guy.row, guy.col);
+                //remove the next apple which is the corresponding bad/good one
+                apples.pop_apple();
+                apples.spawn_apple(guy, 'g');
+                apples.spawn_apple(guy, 'b');
+            }
+
+            //draw the board now that all calculations are done
+            game.draw(2, 0);
+
+            //grab the time
+            current_time = clock();
+            //display the header with current score and time information
+            display_header(guy.length, score_change,
+                           time_ms - (current_time - start_time), time_change);
+
+            //get the keyboard input if there is one right now
+            key = get_kb_input();
+
+            //wait 16 ms because it gives the printing some time to catch up
+            //just in case
+            delay(16);
+        }
+        delay(100);
+        //clear the screen
+        clear_screen();
+        //clear the board and redraw it fully next time we draw it
+        game.clear_board(true);
+        //reset color just in case
+        color(16, 16);
+        
+        //display final score and time information
+        delay(500);
+        cout << "You got " ;
+        color(BLACK, SKY_BLUE);
+        cout << guy.length;
+        color(16, 16);
+        cout << " apples" << endl;
+
+        delay(500);
+        cout << "In ";
+        color(BLACK, SKY_BLUE);
+        cout << (float) time_ms/1000;
+        color(16, 16);
+        cout << " seconds" << endl << endl;delay(500);
+
+        //wait for e/q press to quit/play again
+        cout << "Press q to quit or e to play again...";
+        do {
+            key = wait_for_kb_input();
+        } while(key != 'q' && key != 'e');
+        if (key == 'q')
+            keep_playing = false;
+        else
+            keep_playing = true;
     }
-    delay(100);
-    //clear the screen
-    clear_screen();
-    //reset color just in case
-    color(16, 16);
     
-    //display final score and time information
-    delay(500);
-    cout << "You got " ;
-    color(BLACK, SKY_BLUE);
-    cout << guy.length;
-    color(16, 16);
-    cout << " apples" << endl;
-
-    delay(500);
-    cout << "In ";
-    color(BLACK, SKY_BLUE);
-    cout << (float) time_ms/1000;
-    color(16, 16);
-    cout << " seconds" << endl << endl;
-    delay(500);
-    //wait for enter press to quit
-    cout << "Press enter to quit...";
-    do {
-        key = get_kb_input();
-    } while(key != ENTER);
 
     return 0;
 }
