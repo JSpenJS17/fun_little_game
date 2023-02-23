@@ -1,5 +1,5 @@
 game: game.o engine.o
-	g++ game.o engine.o -o snake.exe
+	g++ -static game.o engine.o -o snake.exe
 
 game.o: game.cpp engine.hpp
 	g++ -c game.cpp
