@@ -1,5 +1,5 @@
 game: game.o engine.o
-	g++ game.o engine.o -static -static-libgcc -static-libstdc++ -o snake.exe
+	g++ game.o engine.o -static -static-libgcc -static-libstdc++ -o funny_game.exe
 
 game.o: game.cpp engine.hpp
 	g++ -c game.cpp
