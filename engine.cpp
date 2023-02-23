@@ -1,0 +1,183 @@
+#include "engine.hpp"
+#include <iostream>
+
+using namespace std;
+
+void delay(int ms){
+    //delay a millisecond amount
+    //storing start time
+    clock_t start_time = clock();
+ 
+    //looping till desired time is achieved
+    while (clock() < start_time + ms);
+}
+
+int rand_int(int limit) {
+    //return a random integer between 0 and the limit.
+    int divisor = RAND_MAX/(limit+1); 
+    int retval;
+
+    do { 
+        retval = rand() / divisor;
+    } while (retval > limit);
+
+    return retval;
+}
+
+void clear_screen(){
+    //function for clearing the std output screen
+    set_cursor_pos(0, 0);
+    cout << "\033[0J";
+}
+
+void cursor_off(){
+    /* turns off the cursor */
+    cout << "\e[?25l"; 
+}
+
+void cursor_on(){
+    /* turns on the cursor */
+    cout << "\e[?25h";
+}
+
+void color(unsigned const short bgc,
+           unsigned const short font_color){
+    /* changes the background and text color to a color between 0-15.
+     * if the input is (16, 16), resets the colors to console default.
+     */
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+
+    if (bgc == 16 && font_color == 16){
+        SetConsoleTextAttribute(out, 0x0F);
+
+    } else {
+        unsigned const short color = bgc * 16 + font_color;
+        SetConsoleTextAttribute(out, color);
+    }
+}
+
+char wait_for_kb_input(){
+    /* waits for user keyboard input and returns the character they input */
+    char key;
+    while (1){
+        if (_kbhit()){
+            key = _getch();
+            break;
+        }
+    }
+    return key;
+}
+
+char get_kb_input(){
+    /* doesn't wait for user keyboard press, just asks if there was one and 
+     * returns the key value it was. If there was no input, returns -1
+     */
+    char key = -1;
+    if (_kbhit())
+        key = _getch();
+    return key;
+}
+
+void set_cursor_pos(unsigned const int row, unsigned const int col){
+    HANDLE out = GetStdHandle(STD_OUTPUT_HANDLE);
+    COORD pos;
+    pos.X = col;
+    pos.Y = row;
+    SetConsoleCursorPosition(out, pos);
+}
+
+Pixel::Pixel(char value, unsigned short bg_color = 16,
+      unsigned short fg_color = 16){
+    val = value;
+    bgc = bg_color;
+    fgc = fg_color;
+}
+
+Pixel::Pixel(){}
+
+bool operator == (Pixel& me, Pixel& other) {
+    return me.bgc == other.bgc &&
+           me.fgc == other.fgc &&
+           me.val == other.val;
+}
+
+bool operator != (Pixel& me, Pixel& other) {
+    return !(me.bgc == other.bgc &&
+           me.fgc == other.fgc &&
+           me.val == other.val);
+}
+
+//board constructor
+//defines the board var as a double vector of fillers in the dimensions
+//given by the user
+Board::Board(const unsigned int length, const unsigned int height,
+            const Pixel filler_pix){
+    //assign vals to class variables
+    len = length;
+    hei = height;
+    filler = filler_pix;
+
+    //create the fully empty board and oldboard
+    for (unsigned int i = 0; i < hei; i++){
+        board.push_back(vector<Pixel> (len));
+        oldboard.push_back(vector<Pixel> (len));
+    }
+
+    //fill the regular board with filler chars
+    clear_board();
+}
+
+void Board::write(const unsigned int row, const unsigned int col,
+        const Pixel pixel){
+    /* writes a val to a given row, col in the board */
+    board.at(row).at(col) = pixel;
+}
+
+void Board::write(const unsigned int row, const unsigned int col){
+    board.at(row).at(col) = filler;
+}
+
+void Board::draw(unsigned const int height_offset, 
+        unsigned const int player_touch_edge){
+    /* draws the updated parts of the board */
+
+    //set the console cursor position
+    for (unsigned int row = 0; row < hei; row++){
+        for (unsigned int col = 0; col < len; col++){
+            if (board.at(row).at(col) != oldboard.at(row).at(col)){
+                set_cursor_pos(row + height_offset, col*2);
+                if (player_touch_edge)
+                    print_in_bounds(board.at(row).at(col), col);
+                else
+                    print_pixel(board.at(row).at(col));
+            }
+        }
+    }
+    oldboard = board;
+    color(16, 16);
+}
+
+void Board::clear_board(){
+    /* sets all positions in the board to the filler character */
+    for (unsigned int i = 0; i < hei; i++){
+        for (unsigned int j = 0; j < len; j++){
+            board.at(i).at(j) = filler;
+        }
+    }
+}
+
+
+void Board::print_in_bounds(Pixel pix, unsigned const int col){
+    if (col < len - 1){
+        color(pix.bgc, pix.fgc);
+        cout << pix.val << " ";
+    } else {
+        color(pix.bgc, pix.fgc);
+        cout << pix.val;
+    }
+}
+
+void Board::print_pixel(Pixel pix){
+    color(pix.bgc, pix.fgc);
+    cout << pix.val << " ";
+}
