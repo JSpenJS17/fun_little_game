@@ -33,10 +33,10 @@ class Apple{
             kind = variety;
             switch (kind){
                 case 'g':
-                    face = Pixel('g', BLUE, BLUE);
+                    face = Pixel('g', LIGHT_BLUE, LIGHT_BLUE);
                     break;
                 case 'b':
-                    face = Pixel('b', RED, RED);
+                    face = Pixel('b', LIGHT_RED, LIGHT_RED);
                     break;
             }
         }
@@ -168,14 +168,14 @@ void display_header(const int score, const int score_change,
     if (score_change < 0){
         sprintf(str, "Score: %3d", score);
         cout << str;
-        color(BLACK, RED);
+        color(BLACK, LIGHT_RED);
         sprintf(str, " %+4d", score_change);
         cout << str << endl;
     }
     else if (score_change > 0){
         sprintf(str, "Score: %3d", score);
         cout << str;
-        color(BLACK, BLUE);
+        color(BLACK, LIGHT_BLUE);
         sprintf(str, " %+4d", score_change);
         cout << str << endl;
     } else {   
@@ -189,12 +189,12 @@ void display_header(const int score, const int score_change,
     cout << str;
 
     if (time_change_ms < 0) {
-        color(BLACK, RED);
+        color(BLACK, LIGHT_RED);
         sprintf(str, " %+03.1f", (double) time_change_ms/1000);
         cout << str;
     }
     else if (time_change_ms > 0){
-        color(BLACK, BLUE);
+        color(BLACK, LIGHT_BLUE);
         sprintf(str, " %+03.1f", (double) time_change_ms/1000);
         cout << str;
     }
@@ -337,7 +337,7 @@ int main(){
         //make the character purple and wait a second as a death animation
         game.write(guy.row, guy.col, Pixel('d', PURPLE, PURPLE));
         game.draw(2, 0);
-        delay(1000);
+        delay(1500);
 
         //clear the screen
         clear_screen();
@@ -349,13 +349,13 @@ int main(){
         //display game over or game won message
         delay(500);
         if (guy.length >= score_max){
-            color(BLACK, BLUE);
+            color(BLACK, LIGHT_BLUE);
             cout << "GAME WON!";
             color(16, 16);
             cout << endl;
         }
         else {
-            color(BLACK, RED);
+            color(BLACK, LIGHT_RED);
             cout << "GAME OVER";
             color(16, 16);
             cout << endl;
@@ -364,22 +364,22 @@ int main(){
         //display final score and time information
         delay(500);
         cout << "You got " ;
-        color(BLACK, BLUE);
+        color(BLACK, LIGHT_BLUE);
         cout << guy.length;
         color(16, 16);
         cout << " apples" << endl;
 
         delay(500);
         cout << "In ";
-        color(BLACK, BLUE);
+        color(BLACK, LIGHT_BLUE);
         cout << (float) final_time/1000;
         color(16, 16);
         cout << " seconds" << endl << endl;delay(500);
 
         //wait for e/q press to quit/play again
-        color(BLACK, RED);
+        color(BLACK, LIGHT_RED);
         cout << "Press q to quit\n";
-        color(BLACK, BLUE);
+        color(BLACK, LIGHT_BLUE);
         cout << "Press e to play again";
         color(16, 16);
         do {
