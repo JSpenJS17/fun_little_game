@@ -1,8 +1,8 @@
 game: game.o engine.o
-	g++ -static -static-libgcc -static-libstdc++ game.o engine.o -o game.exe
+	g++ game.o engine.o -o game.exe
 
 game.o: game.cpp engine.hpp
-	g++ -c game.cpp
+	g++ -static -static-libgcc -static-libstdc++ -c game.cpp
 
 engine.o: engine.hpp engine.cpp
 	g++ -c engine.cpp
