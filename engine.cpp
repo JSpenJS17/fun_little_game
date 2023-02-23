@@ -1,7 +1,12 @@
 #include "engine.hpp"
 #include <iostream>
+#include <cmath>
 
 using namespace std;
+
+float dist(const int x1, const int y1, const int x2, const int y2){
+    return sqrt((y2-y1)*(y2-y1) + (x2-x1)*(x2-x1));
+}
 
 void delay(int ms){
     //delay a millisecond amount
@@ -116,6 +121,14 @@ void set_cursor_pos(unsigned const int row, unsigned const int col){
     SetConsoleCursorPosition(out, pos);
 }
 
+void draw_pixel(Pixel pix){
+    /* draws a pixel at the current cursor position */
+    color(pix.fgc, pix.bgc);
+    cout << pix.val << " ";
+    color(16, 16);
+    delay(16);
+}
+
 Pixel::Pixel(char value, unsigned short bg_color = 16,
       unsigned short fg_color = 16){
     val = value;
@@ -188,6 +201,7 @@ void Board::draw(unsigned const int height_offset,
     }
     oldboard = board;
     color(16, 16);
+    delay(16);
 }
 
 void Board::clear_board(const bool redraw_whole_board){

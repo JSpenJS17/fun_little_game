@@ -27,6 +27,8 @@ using namespace std;
 #define LIGHT_YELLOW    14
 #define WHITE           15
 
+float dist(const int x1, const int y1, const int x2, const int y2);
+
 void set_cursor_pos(const unsigned int row, const unsigned int col);
 
 void delay(int ms);
@@ -90,5 +92,7 @@ class Board{
 
         void print_pixel(Pixel pix);
 };
+
+void draw_pixel(Pixel pix);
 
 #endif
