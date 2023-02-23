@@ -285,6 +285,7 @@ int main(){
         //just in case
         delay(16);
     }
+    delay(100);
     //clear the screen
     clear_screen();
     //reset color just in case
