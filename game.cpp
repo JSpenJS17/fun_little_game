@@ -203,7 +203,7 @@ void display_header(const int score, const int score_change,
 int main(){
     //setup the screen
     clear_screen();
-    cursor_off();
+    show_cursor(false);
 
     //create a random seed
     srand(time(NULL));

@@ -35,9 +35,7 @@ int rand_int(int limit);
 
 void clear_screen();
 
-void cursor_off();
-
-void cursor_on();
+void show_cursor(bool show);
 
 void color(unsigned const short bgc,
            unsigned const short font_color);
