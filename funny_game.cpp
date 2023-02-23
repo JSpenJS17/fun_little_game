@@ -17,7 +17,6 @@ unsigned int size_x = 11;
 unsigned int size_y = 11;
 unsigned short bg_color = LIGHT_GRAY;
 const Pixel bg = Pixel('-', bg_color, bg_color);
-
 Board game = Board(size_x, size_y, bg);
 
 class Apple{
@@ -176,7 +175,7 @@ void display_header(const int score, const int score_change,
     else if (score_change > 0){
         sprintf(str, "Score: %3d", score);
         cout << str;
-        color(BLACK, SKY_BLUE);
+        color(BLACK, BLUE);
         sprintf(str, " %+4d", score_change);
         cout << str << endl;
     } else {   
@@ -195,7 +194,7 @@ void display_header(const int score, const int score_change,
         cout << str;
     }
     else if (time_change_ms > 0){
-        color(BLACK, SKY_BLUE);
+        color(BLACK, BLUE);
         sprintf(str, " %+03.1f", (double) time_change_ms/1000);
         cout << str;
     }
@@ -265,6 +264,8 @@ int main(){
 
         //set the total play time allowed
         int time_ms = 15000;
+        //set highest score allowed
+        int score_max = 200;
 
         //display the header
         display_header(0, 0, time_ms, 0);
@@ -282,7 +283,9 @@ int main(){
         short score_change = 0;
         
         //current_time - start_time = time elapsed, while that's < time_ms, do:
-        while (current_time - start_time < time_ms){
+        while (current_time - start_time < time_ms
+                && guy.length < score_max
+                && guy.length >= 0){
             key = convert_to_wasd(key);
             //move the guy based on key input
             guy.move(key);
@@ -327,7 +330,15 @@ int main(){
             //just in case
             delay(16);
         }
-        delay(100);
+        //grab the total time spent in game
+        current_time = clock();
+        clock_t final_time = current_time - start_time;
+
+        //make the character purple and wait a second as a death animation
+        game.write(guy.row, guy.col, Pixel('d', PURPLE, PURPLE));
+        game.draw(2, 0);
+        delay(1000);
+
         //clear the screen
         clear_screen();
         //clear the board and redraw it fully next time we draw it
@@ -335,26 +346,47 @@ int main(){
         //reset color just in case
         color(16, 16);
         
+        //display game over or game won message
+        delay(500);
+        if (guy.length >= score_max){
+            color(BLACK, BLUE);
+            cout << "GAME WON!";
+            color(16, 16);
+            cout << endl;
+        }
+        else {
+            color(BLACK, RED);
+            cout << "GAME OVER";
+            color(16, 16);
+            cout << endl;
+        }
+
         //display final score and time information
         delay(500);
         cout << "You got " ;
-        color(BLACK, SKY_BLUE);
+        color(BLACK, BLUE);
         cout << guy.length;
         color(16, 16);
         cout << " apples" << endl;
 
         delay(500);
         cout << "In ";
-        color(BLACK, SKY_BLUE);
-        cout << (float) time_ms/1000;
+        color(BLACK, BLUE);
+        cout << (float) final_time/1000;
         color(16, 16);
         cout << " seconds" << endl << endl;delay(500);
 
         //wait for e/q press to quit/play again
-        cout << "Press q to quit or e to play again...";
+        color(BLACK, RED);
+        cout << "Press q to quit\n";
+        color(BLACK, BLUE);
+        cout << "Press e to play again";
+        color(16, 16);
         do {
             key = wait_for_kb_input();
         } while(key != 'q' && key != 'e');
+
+        //depending on press, assign keep_playing accordingly
         if (key == 'q')
             keep_playing = false;
         else
