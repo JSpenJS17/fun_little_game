@@ -13,10 +13,18 @@ class Apple;
 class Player;
 class Apple_Manager;
 
-unsigned int size_x = 13;
-unsigned int size_y = 13;
+/* define global variables */
+//board sizes
+unsigned int size_x = 15;
+unsigned int size_y = 15;
+
+/* background color variable */
 unsigned short bg_color = LIGHT_GRAY;
+
+/* background pixel variable */
 const Pixel bg = Pixel('-', bg_color, bg_color);
+
+/* game board */
 Board game = Board(size_x, size_y, bg);
 
 class Apple{
@@ -28,6 +36,7 @@ class Apple{
 
         Apple(const unsigned int init_row, const unsigned int init_col, 
               char variety = 'g'){
+            /* creates an apple object of a given variety */
             row = init_row;
             col = init_col;
             kind = variety;
@@ -50,6 +59,11 @@ class Apple{
             }
         }
 
+        inline bool operator==(Apple o){
+            return row == o.row && col == o.col 
+                    && face == o.face && kind == o.kind;
+        }
+
         Apple(){};
 
 };
@@ -64,6 +78,7 @@ class Player{
 
         Player(const unsigned int init_row, const unsigned int init_col,
                 const Pixel disp_pixel){
+            /* creates a player character */
             row = init_row;
             col = init_col;
             face = disp_pixel;
@@ -72,25 +87,32 @@ class Player{
         }
 
         void move(char key){
+            /* move the character based on the key pressed */
+            //write background to the old position
             game.write(row, col);
             switch (key){
+                //move the character but never out of bounds
                 case 'w':
                     if (row > 0)
                         row--;
                     break;
+
                 case 's':
                     if (row < size_y - 1)
                         row++;
                     break;
+
                 case 'a':
                     if (col > 0)
                         col--;
                     break;
+
                 case 'd':
                     if (col < size_x - 1)
                         col++;
                     break;
             }
+            //write the character to the new pos
             game.write(row, col, face);
         }
 };
@@ -105,7 +127,7 @@ class Apple_Manager{
             // 1. the player isn't within 2.5 units of the spawn position and
             // 2. the spawn position isn't on top of an existing apple
             do {
-                row = rand_int(size_y-1);
+               row = rand_int(size_y-1);
                 col = rand_int(size_x-1);
             } while (on_apple(row, col) 
                      || dist(guy.col, guy.row, col, row) <= 2.5);
@@ -115,12 +137,11 @@ class Apple_Manager{
             game.write(new_apple.row, new_apple.col, new_apple.face);
         }
 
-        void remove_apple(const unsigned int row, const unsigned int col){
+        void remove_apple(Apple apple){
             /* deletes an apple and removes it from the game board */
-            Apple apple;
             for (unsigned int i = 0; i < apple_list.size(); i++){
-                apple = apple_list.at(i);
-                if (apple.row == row && apple.col == col)
+                Apple o_apple = apple_list.at(i);
+                if (apple == o_apple)
                     apple_list.erase(apple_list.begin() + i);
             }
             game.write(apple.row, apple.col, bg);
@@ -135,6 +156,7 @@ class Apple_Manager{
         }
 
         void clear_apples(){
+            /* clears all apples from the apple list and game board. */
             for (unsigned int i = 0; i < apple_list.size(); i++){
                 Apple apple = apple_list.at(i);
                 game.write(apple.row, apple.col, bg);
@@ -153,6 +175,9 @@ class Apple_Manager{
         }
 
         Apple get_apple_at(unsigned const int row, unsigned const int col){
+            /* returns the apple at the row, col inputted 
+             * throws an exception if there is no apple
+             */
             for (unsigned int i = 0; i < apple_list.size(); i++){
                 Apple apple = apple_list.at(i);
                 if (apple.row == row && apple.col == col)
@@ -191,7 +216,7 @@ void display_header(const int score, const int score_change,
 
     } else {   
         //print out some extra whitespace to cover old score increment
-        cout << "     " << endl;
+        cout << "      Last Collected" << endl;
     }
 
     //reset color
@@ -219,27 +244,12 @@ void display_header(const int score, const int score_change,
         cout << "     ";
     }
 
+    //reset color
     color(16, 16);
 }
 
-bool is_on_arrows(const char key){
-    switch (key){
-        case UP:
-            return true;
-
-        case DOWN:
-            return true;
-
-        case RIGHT:
-            return true;
-
-        case LEFT:
-            return true;
-    }
-    return false;
-}
-
 char convert_to_wasd(const char key){
+    /* converts arrow key inputs to WASD */
     switch (key){
         case UP:
             return 'w';
@@ -257,14 +267,15 @@ char convert_to_wasd(const char key){
 }
 
 void display_main_menu(){
+    /* displays the main menu */
     color(LIGHT_BLUE, LIGHT_BLUE);
     for (int i = 0; i < (size_x*2-10)/2; i++)
         cout << "-";
     
-    color(BLACK, LIGHT_BLUE);
+    color(LIGHT_GRAY, LIGHT_BLUE);
     cout << "funny";
     
-    color(BLACK, LIGHT_RED);
+    color(LIGHT_GRAY, LIGHT_RED);
     cout << " game";
     
     color(LIGHT_RED, LIGHT_RED);
@@ -274,27 +285,40 @@ void display_main_menu(){
 
     Apple display_apple = Apple(0, 0, 'g');
     draw_pixel(display_apple.face);
-    cout << ": Good Apple" << endl << endl;
+    cout << " ";
+    color(BLACK, LIGHT_BLUE);
+    cout << ": good apple" << endl << endl;
     
     display_apple = Apple(0, 0, 'b');
     draw_pixel(display_apple.face);
-    cout << ": Bad Apple" << endl << endl;
+    cout << " ";
+    color(BLACK, LIGHT_RED);
+    cout << ": bad apple" << endl << endl;
 
     display_apple = Apple(0, 0, 's');
     draw_pixel(display_apple.face);
-    cout << ": Special Apple" << endl << endl;
+    cout << " ";
+    color(BLACK, LIGHT_YELLOW);
+    cout << ": special apple" << endl << endl;
 
     display_apple = Apple(0, 0, 't');
     draw_pixel(display_apple.face);
-    cout << ": Time Apple" << endl << endl;
+    cout << " ";
+    color(BLACK, MAGENTA);
+    cout << ": time apple" << endl << endl;
 
     display_apple = Apple(0, 0, 'm');
     draw_pixel(display_apple.face);
-    cout << ": Mystery Apple" << endl << endl;
+    cout << " ";
+    color(BLACK, LIGHT_GRAY);
+    cout << ": mystery apple" << endl << endl;
 
-    cout << "Press enter to play";
+    color(16, 16);
+    cout << "wasd/arrows to move" << endl;
+    cout << "p to pause" << endl;
+
+    cout << "press enter to play";
     
-
 }
 
 int main(){
@@ -313,8 +337,9 @@ int main(){
         //create the apple manager
         Apple_Manager apples = Apple_Manager();
         apples.spawn_apple(guy, 'g');
-        apples.spawn_apple(guy, 'b');
-        apples.spawn_apple(guy, 'b');
+        int rand = rand_int(2);
+        for (int i = 0; i < rand+4; i++)
+            apples.spawn_apple(guy, 'b');
 
         //display the main menu
         display_main_menu();
@@ -368,9 +393,11 @@ int main(){
             //if the guy is on an apple
             if (apples.on_apple(guy.row, guy.col)){
                 Apple apple = apples.get_apple_at(guy.row, guy.col);
+                cout << "       ";
+                draw_pixel(apple.face);
                 switch (apple.kind){
                     case 'g':
-                        time_change = 1000;
+                        time_change = 500;
                         score_change = 1;
                         break;
 
@@ -386,14 +413,14 @@ int main(){
 
                     case 'm':
                         {
-                            int rand = rand_int(1);
+                            rand = rand_int(1);
                             if (rand){
                                 time_change = 2500;
                                 score_change = 5;
                             }
                             else {
-                                time_change = -2000;
-                                score_change = -2;
+                                time_change = -1500;
+                                score_change = -3;
                             }
                             break;
                         }
@@ -409,20 +436,29 @@ int main(){
                 time_max_ms += time_change;
                 //eat the apple
                 guy.length += score_change;
-                //remove the apple from the list
-                apples.remove_apple(guy.row, guy.col);
-                //clear all apples from the list
-                apples.clear_apples();
-                //spawn a couple of apples
-                apples.spawn_apple(guy, 'g');
-                apples.spawn_apple(guy, 'b');
-                apples.spawn_apple(guy, 'b');
-                if (rand_int(19) == 19)
-                    apples.spawn_apple(guy, 's');
-                if (rand_int(9) == 9)
-                    apples.spawn_apple(guy, 'm');
-                if (rand_int(19) == 19)
-                    apples.spawn_apple(guy, 't');
+                if (apple.kind == 'b'){
+                    //if you got a bad apple, remove just that one
+                    apples.remove_apple(apple);
+                }
+                else{
+                    //otherwise remove all apples from the list
+                    apples.clear_apples();
+
+                    //spawn apples
+                    apples.spawn_apple(guy, 'g');
+
+                    rand = rand_int(2);
+                    for (int i = 0; i < rand+4; i++)
+                        apples.spawn_apple(guy, 'b');
+
+                    //spawn special apples
+                    if (rand_int(19) == 19)
+                        apples.spawn_apple(guy, 's');
+                    if (rand_int(9) == 9)
+                        apples.spawn_apple(guy, 'm');
+                    if (rand_int(19) == 19)
+                        apples.spawn_apple(guy, 't');
+                }
             }
 
             //draw the board now that all calculations are done
@@ -461,13 +497,13 @@ int main(){
         //display game over or game won message
         delay(500);
         if (guy.length >= score_max){
-            color(BLACK, LIGHT_BLUE);
+            color(GRAY, LIGHT_BLUE);
             cout << "GAME WON!";
             color(16, 16);
             cout << endl;
         }
         else {
-            color(BLACK, LIGHT_RED);
+            color(GRAY, LIGHT_RED);
             cout << "GAME OVER";
             color(16, 16);
             cout << endl;
