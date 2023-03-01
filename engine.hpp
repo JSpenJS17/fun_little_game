@@ -96,3 +96,4 @@ class Board{
 void draw_pixel(Pixel pix);
 
 #endif
+

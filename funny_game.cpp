@@ -1,9 +1,11 @@
 #include "engine.hpp"
 #include <iostream>
+#include <string>
 
 using namespace std;
 
 #define ENTER 13
+#define ESC 27
 #define UP 72
 #define LEFT 75
 #define DOWN 80
@@ -315,10 +317,10 @@ void display_main_menu(){
 
     color(16, 16);
     cout << "wasd/arrows to move" << endl;
-    cout << "p to pause" << endl;
+    cout << "p to pause" << endl << endl;
 
-    cout << "press enter to play";
-    
+    color(BLACK, CYAN);
+    cout << "press enter to play";   
 }
 
 int main(){
@@ -343,11 +345,13 @@ int main(){
 
         //display the main menu
         display_main_menu();
-        
+
         //wait until enter is pressed
         char key = -1;
-        while (key != ENTER)
+        while (key != ENTER){
+            //wait for the keyboard input
             key = wait_for_kb_input();
+        }
 
         //clear the screen
         clear_screen();
@@ -356,6 +360,7 @@ int main(){
         game.draw(2, 0);
 
         //set the total play time allowed
+        //get the string of the time allowed option
         int time_max_ms = 15000;
         //set highest score allowed
         int score_max = 100;
@@ -541,7 +546,6 @@ int main(){
             keep_playing = true;
     }
     
-
     return 0;
 }
 

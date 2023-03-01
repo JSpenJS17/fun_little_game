@@ -232,3 +232,4 @@ void Board::print_pixel(Pixel pix){
     color(pix.bgc, pix.fgc);
     cout << pix.val << " ";
 }
+
