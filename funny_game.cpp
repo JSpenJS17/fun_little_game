@@ -1,15 +1,16 @@
 #include "engine.hpp"
 #include <iostream>
 #include <string>
+#include <signal.h>
 
 using namespace std;
 
-#define ENTER 13
+// #define ENTER 13
 #define ESC 27
-#define UP 72
-#define LEFT 75
-#define DOWN 80
-#define RIGHT 77
+// #define UP 72
+// #define LEFT 75
+// #define DOWN 80
+// #define RIGHT 77
 
 class Apple;
 class Player;
@@ -320,10 +321,34 @@ void display_main_menu(){
     cout << "p to pause" << endl << endl;
 
     color(BLACK, CYAN);
-    cout << "press enter to play";   
+    cout << "press enter to play" << endl;
+    fflush(stdout);
+}
+
+void sigint_handler(int sig) {
+    /* handles the ctrl+c signal */
+    cout << "\n\n";
+    
+    #if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+    // linux/mac specific reset
+    reset_termios();
+    #endif
+
+    color(16, 16);
+    show_cursor(true);
+    cout << "Exiting game..." << endl;
+    clear_screen();
+    exit(0);
 }
 
 int main(){
+    signal(SIGINT, sigint_handler);
+
+    #if defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+    // linux/mac specific init
+    init_termios();
+    #endif
+
     bool keep_playing = true;
     while (keep_playing){
         //setup the screen
@@ -357,7 +382,7 @@ int main(){
         clear_screen();
 
         //draw the board with space for the header
-        game.draw(2, 0);
+        game.draw(2, false);
 
         //set the total play time allowed
         //get the string of the time allowed option
@@ -371,7 +396,8 @@ int main(){
         //wait until there is a key pressed...
         key = -1;
         while (key != 'w' && key != 'a' && key != 's' && key != 'd')
-            key = convert_to_wasd(wait_for_kb_input());
+            key = convert_to_wasd(get_kb_input());
+
 
 
 
@@ -392,6 +418,7 @@ int main(){
                 while (key != 'p')
                     key = wait_for_kb_input();
             }
+
             //move the guy based on key input
             guy.move(key);
 
@@ -467,7 +494,7 @@ int main(){
             }
 
             //draw the board now that all calculations are done
-            game.draw(2, 0);
+            game.draw(2, false);
 
             //display the header with current score and time information
             display_header(guy.length, score_change, time_max_ms-spent_time_ms,
@@ -490,6 +517,7 @@ int main(){
         //make the character purple and wait a second as a death animation
         game.write(guy.row, guy.col, Pixel('d', PURPLE, PURPLE));
         game.draw(2, 0);
+        fflush(stdout);
         delay(1500);
 
         //clear the screen
@@ -545,7 +573,6 @@ int main(){
         else
             keep_playing = true;
     }
-    
-    return 0;
-}
 
+    sigint_handler(0);
+}

@@ -1,20 +1,9 @@
 #include "engine.hpp"
-#include <iostream>
-#include <cmath>
 
 using namespace std;
 
 float dist(const int x1, const int y1, const int x2, const int y2){
     return sqrt((y2-y1)*(y2-y1) + (x2-x1)*(x2-x1));
-}
-
-void delay(int ms){
-    //delay a millisecond amount
-    //storing start time
-    clock_t start_time = clock();
- 
-    //looping till desired time is achieved
-    while (clock() < start_time + ms);
 }
 
 int rand_int(int limit) {
@@ -27,6 +16,17 @@ int rand_int(int limit) {
     } while (retval > limit);
 
     return retval;
+}
+
+#ifdef _WIN32
+// Windows implementation of terminal control functions
+void delay(int ms){
+    //delay a millisecond amount
+    //storing start time
+    clock_t start_time = clock();
+ 
+    //looping till desired time is achieved
+    while (clock() < start_time + ms);
 }
 
 void clear_screen(){
@@ -121,12 +121,97 @@ void set_cursor_pos(unsigned const int row, unsigned const int col){
     SetConsoleCursorPosition(out, pos);
 }
 
+#elif defined(__linux__) || (defined(__APPLE__) && defined(__MACH__))
+// Linux implementation of terminal control functions
+void delay(int ms){
+    //delay a millisecond amount
+    usleep(ms * 1000);
+}
+
+void clear_screen(){
+    cout << "\033[2J\033[1;1H";
+}
+
+void show_cursor(bool show){
+    if (show)
+        cout << "\e[?25h";
+    else
+        cout << "\e[?25l";
+}
+
+void color(unsigned const short bgc,
+           unsigned const short font_color){
+    /* changes the background and text color to a color between 0-15.
+     * if the input is (16, 16), resets the colors to console default.
+     */
+    if (bgc == 16 && font_color == 16){
+        cout << "\033[0m";
+    } else {
+        cout << "\033[" << bgc+10 << ";" << font_color << "m";
+    }
+}
+
+static struct termios old, current;
+
+void init_termios(){
+    tcgetattr(0, &old);
+    current = old;
+    current.c_lflag &= ~(ICANON | ECHO);
+    current.c_cc[VMIN] = 1;
+    current.c_cc[VTIME] = 0;
+    tcsetattr(0, TCSANOW, &current);
+}
+
+void reset_termios() {
+    tcsetattr(0, TCSANOW, &old);
+}
+
+char wait_for_kb_input(){
+    /* waits for user keyboard input and returns the character they input */
+    char key = -1;
+    key = getchar();
+    if (key == 27) { // Escape sequence
+        if (getchar() == 91) { // '['
+            key = getchar(); // Final byte
+        }
+    }
+    return key;
+}
+
+bool kbhit(){
+    /* checks if there is a keyboard input 
+    assumes termios has been init'd*/
+    int byteswaiting;
+    ioctl(0, FIONREAD, &byteswaiting);
+    return byteswaiting > 0;
+}
+
+char get_kb_input(){
+    /* doesn't wait for user keyboard press, just asks if there was one and 
+     * returns the key value it was. If there was no input, returns -1
+     */
+    char key = -1;
+    if (kbhit()) {
+        key = getchar();
+        if (key == 27) { // Escape sequence
+            if (getchar() == 91) { // '['
+                key = getchar(); // Final byte
+            }
+        }
+    }
+    return key;
+}
+
+void set_cursor_pos(unsigned const int row, unsigned const int col){
+    cout << "\033[" << row+1 << ";" << col+1 << "H";
+}
+#endif
+
 void draw_pixel(Pixel pix){
     /* draws a pixel at the current cursor position */
     color(pix.fgc, pix.bgc);
     cout << pix.val << " ";
     color(16, 16);
-    delay(16);
 }
 
 Pixel::Pixel(char value, unsigned short bg_color = 16,
@@ -144,7 +229,7 @@ bool operator == (Pixel& me, Pixel& other) {
            me.val == other.val;
 }
 
-bool operator != (Pixel& me, Pixel& other) {
+bool operator != (Pixel& me, Pixel& other){
     return !(me.bgc == other.bgc &&
            me.fgc == other.fgc &&
            me.val == other.val);
@@ -183,25 +268,31 @@ void Board::write(const unsigned int row, const unsigned int col){
     board.at(row).at(col) = filler;
 }
 
-void Board::draw(unsigned const int height_offset, 
-        unsigned const int player_touch_edge){
+void Board::draw(unsigned const int height_offset, bool last_col_no_space){
     /* draws the updated parts of the board */
 
-    //set the console cursor position
+    //loop through game board
     for (unsigned int row = 0; row < hei; row++){
         for (unsigned int col = 0; col < len; col++){
+            //if the current board doesn't match the old board at the row, col
             if (board.at(row).at(col) != oldboard.at(row).at(col)){
+                //set the cursor pos to the right spot
                 set_cursor_pos(row + height_offset, col*2);
-                if (player_touch_edge)
+                //draw the pixel
+                if (last_col_no_space)
                     print_in_bounds(board.at(row).at(col), col);
                 else
                     print_pixel(board.at(row).at(col));
             }
         }
     }
+    //update the old board to the current board
     oldboard = board;
+    //reset the color
     color(16, 16);
-    delay(16);
+    //wait a frame to let the color change, for some reason it can break if it
+    //doesn't wait a frame
+    //delay(16);
 }
 
 void Board::clear_board(const bool redraw_whole_board){
@@ -231,5 +322,9 @@ void Board::print_in_bounds(Pixel pix, unsigned const int col){
 void Board::print_pixel(Pixel pix){
     color(pix.bgc, pix.fgc);
     cout << pix.val << " ";
+}
+
+Pixel Board::get_pix_at(unsigned const int row, unsigned const int col){
+    return board.at(row).at(col);
 }
 
